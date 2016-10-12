@@ -23,69 +23,60 @@ BEGIN{
 		package experimental;
 		use warnings::register;
 	}
-  $|++;     # Enable autoflush on STDOUT
-	$, = " "; # Separator for print x,y,z
-	$" = " "; # Separator for print "@array";
 }
 no warnings 'experimental';
-use constant EXP=>1;
 use constant OP=>2;
 use constant UN=>3;
+use constant NUM=>4;
 
 
 sub tokenize {
 	chomp(my $expr = shift);
 	my @res;
-  my @chunks = split(m{([-+*/()])}, $expr);
+  my @chunks = split m{((?<!e)[-+]|[*()/^]|\s+)},$expr;
   my $prev = "";
   my $state = 0;
   for my $c (@chunks){
       given ($c){
           when (/^\s*$/) {} # то-же самое
-          when (/\d*.?\d+E/){ # элемент содержит число в эксп. записи
-              $prev.=$c;
-              $state = 1;
+          when (/^\d*\.?\d+([eE][+-]?\d+)?$/) { # элемент содержит число))
+              push(@res,$c);
+              $state=NUM;
           }
-          when (/\d*.?\d+/) { # элемент содержит число
-              if ($state==EXP){
-                  $prev.=$c;
-                  push(@res,$prev);
-                  $prev="";
-                  $state=0;
-              }
-              else{push(@res,$c);}
-          }
-          when ([ '+','-' ]){ # элемент "+" или "-"
-              if ($state==EXP){
-                  $prev.=$c;
-              }
-              elsif($state==OP or $state==UN){push(@res,("U".$c));$state=UN}
-              else {push(@res,$c);$state=OP}
-          }
+          when (['+','-']){ # элемент "+" или "-"
+              if($state==NUM){push(@res,$c);$state=OP}
+              else {push(@res,("U".$c));$state=UN;}
+         }
           when(['(',')']){
               push(@res,$c);
-              $state=0;
+              if ($c eq '('){$state = 0;}
+              else {$state = NUM;}
           }
-          when(['*','/']){
-              unless ($state){
+          when(['*','/','^']){
+              if($state==NUM){
                   push(@res,$c);
+                  $state=OP;
               }
               else {
                   die "incorrect operators: '$_'";
               }
 
-          }
+          }#хлебозаводский проезд д 7 стр 10
           default {
               die "Bad: '$_'";
 }
       }
   }
+  unless ($state==NUM){die "No nums or wrong parentesis! '$expr'"}
 	return \@res;
 }
-if ($__FILE__ eq $__MAIN__){
+
+unless (caller){
     use Data::Dumper;
     while (my $expression = <>) {
         next if $expression =~ /^\s*$/;
         print Dumper(tokenize($expression));
     }
 }
+
+1;
