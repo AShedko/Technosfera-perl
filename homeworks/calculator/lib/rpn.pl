@@ -43,7 +43,7 @@ sub rpn {
   for my $c (@{$source}){
       given ($c){
           when (['+','-','*','/','U+','U-','^']){#operation
-              if ($_=~/U[\+\-]|\^/){#right assoc
+              if ($c=~/U[\+\-]|\^/){#right assoc
                   while (priority($c)<priority($op[-1])){
                       push(@rpn,pop(@op));
                   }
