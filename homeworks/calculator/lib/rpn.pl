@@ -38,7 +38,7 @@ sub rpn {
 	my @rpn;
 
 #  my @stack;
-  my @op;
+  my @op = ();
 
   for my $c (@{$source}){
       given ($c){
