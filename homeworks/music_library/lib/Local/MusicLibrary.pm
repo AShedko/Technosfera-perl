@@ -67,28 +67,47 @@ sub create_table($$) {
             }
         );
     }
-
-    #p @table;
-    # my %sizes = get_sizes(\@table);
-    # my @result = process_params(\@table,$params);
-    printer( \@table, [] );
+    (my @result, my @goalList) = process_params(\@table,$params);
+    printer( \@result, \@goalList);
 }
 
-sub get_sizes($){
-  my $table=[];
-  $table = shift;
-}
-
-sub printer($$) {
+sub get_sizes( $ ) {
     my $table = [];
-    my $sizes = [];
-    ( $table, $sizes ) = shift;
+    ($table) = @_;
+    my %sizes = (
+        band   => 1,
+        track  => 1,
+        album  => 1,
+        format => 1,
+        year   => 1
+    );
+    for my $row (@$table) {
+        for my $k ( keys %$row ) {
+            my $v = $row->{$k};
+            if ( length $sizes{$k} < length $v ) {
+              $sizes{$k} = $v
+            };
+        }
+    }
+    %sizes;
+}
+
+use List::Util qw(reduce);
+
+sub printer( $$ ) {
+    (my $table, my $goalList) = @_;
+    my %sizes = get_sizes($table);
+    my $hline = ( "-" x (reduce {$a+$b} values %sizes));
+    print "/$hline\\\n";
     for my $row (@$table) {
         print "|";
-        for ( values %$row ) {
-            print " $_ |";
+
+        unless ($row == $$table[-1]){
+          print "\n|" . ( "-" x 80 ) . "|\n";
         }
-        print "\n|" . ("-" x 80 ) . "|\n";
+        else{
+          print "\n\\$hline/\n";
+        }
     }
 }
 

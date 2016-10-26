@@ -12,6 +12,9 @@ BEGIN{
 }
 
 no warnings 'experimental';
+use Exporter 'import';
+
+our @EXPORT  = qw/process_params/;
 
 =encoding utf8
 
@@ -31,10 +34,11 @@ sub process_params($$){
     my $table = [];
     my $params = {};
     ($table, $params) = @_;
+    my @goalList=();
     for my $opt (keys %$params){
         given ($opt) {
             when (['band','album','track','format','year']){
-                grep {$_{$opt}==$params->{$opt}} @$table;
+                grep {$_->{$opt} eq $params->{$opt}} @$table;
             }
             when('sort'){
                 my $k = $params->{$opt};
@@ -43,8 +47,13 @@ sub process_params($$){
                 }
                 else{sort {$a->{$k}<=>$b->{$k}} @$table;}
             }
+            when('columns'){
+                @goalList = split m/\,/, $params->{$opt};
+            }
         }
     }
+    unless (@goalList) { @goalList = ('year','band','album','track','format'); }
+    return (@$table, @goalList,);
 }
 
 1;
