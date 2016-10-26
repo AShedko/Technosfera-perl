@@ -25,6 +25,7 @@ $term->MinLine();
 
 my $login_prompt = "Enter your nick ";
 my $prompt = "Enter your message> ";
+my $pass_prompt = "Enter pass ";
 
 local $SIG{WINCH} = sub {
 	( $term_width, $term_height ) = GetTerminalSize();
@@ -55,12 +56,15 @@ sub add_message {
 }
 
 my $nick = $term->readline($login_prompt);
+my $pass = $term->readline($pass_prompt);
+
 chomp($nick);
-$term->MinLine(1);
+chomp($pass);
+$term->MinLine(2);
 
 init();
 
-my $server = Local::Chat::ServerConnection->new(nick => $nick, host => $ARGV[0] || 'localhost',
+my $server = Local::Chat::ServerConnection->new(nick => $nick,pass=> $pass, host => $ARGV[0] || 'localhost',
 	on_fd => sub {
 		my ($srv, $fd) = @_;
 		if ($fd == $term->IN) {
@@ -75,14 +79,8 @@ my $server = Local::Chat::ServerConnection->new(nick => $nick, host => $ARGV[0] 
 					$srv->nick($2);
 					return;
 				}
-				elsif($1 eq 'join') {
-					$srv->join($2);
-				}
-				elsif($1 eq 'create') {
-					$srv->create($2);
-				}
 				elsif ($1 eq 'names') {
-					$srv->names($2);
+					$srv->names();
 				}
 				elsif ($1 eq 'kill') {
 					$srv->kill($2);
