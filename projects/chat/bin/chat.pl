@@ -75,8 +75,14 @@ my $server = Local::Chat::ServerConnection->new(nick => $nick, host => $ARGV[0] 
 					$srv->nick($2);
 					return;
 				}
+				elsif($1 eq 'join') {
+					$srv->join($2);
+				}
+				elsif($1 eq 'create') {
+					$srv->create($2);
+				}
 				elsif ($1 eq 'names') {
-					$srv->names();
+					$srv->names($2);
 				}
 				elsif ($1 eq 'kill') {
 					$srv->kill($2);

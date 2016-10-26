@@ -164,6 +164,20 @@ sub packet {
 		when ("kill") {
 			$self->server->kill($pkt->{data}{user})
 		}
+		when ("join") {
+			#return $self->disconnect("data.join required") unless $data->{join};
+			#my $room = $data->{join};
+			my $room = $pkt->{data}{on};
+			if(exists $self->server->rooms->{$room}){
+				$self->server->rooms->{$room}->join($self);
+			}
+			else {
+				return $self->disconnect("JOIN FAIL $pkt->{cmd}");
+			}
+		}
+		when ("create") {
+			$self->server->create($pkt->{data}{on});
+		}
 		default {
 			return $self->disconnect("unknown command $pkt->{cmd}");
 		}

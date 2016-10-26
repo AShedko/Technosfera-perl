@@ -38,6 +38,8 @@ has 'default_room', is => 'ro', default => sub {
 	);
 };
 
+has 'rooms', is => 'rw', default => sub{{}};
+
 sub BUILD {
 	my $self = shift;
 	my $server = IO::Socket::INET->new(
@@ -50,6 +52,7 @@ sub BUILD {
 	fh_nonblocking($server,1);
 	$self->fh($server);
 	$self->sel->add($server);
+	$self->rooms->{$self->default_room->name} = $self->default_room;
 	printf "Server listening on %s:%s\n", $server->sockhost, $server->sockport;
 }
 
@@ -177,7 +180,7 @@ sub accept_client {
 		delete $self->peers->{ $remote };
 
 		# Remove from rooms
-		for my $room ( $self->default_room ) {
+		for my $room ( values %{$self->rooms} ) {
 			$room->remove( $client );
 		}
 
@@ -238,7 +241,6 @@ sub validate_nick {
 
 	# Notify client about it's nickname
 	$client->event("nick", { nick => $client->nick });
-
 	return 1;
 }
 
@@ -257,12 +259,24 @@ sub event {
 	}
 }
 
+sub create {
+	my ($self, $room) = @_;
+	unless (exists $self->rooms->{$room})
+	{
+		$self->rooms->{$room} = Local::Chat::Room->new(
+			name => $room,
+			server => $self,
+		);
+	}
+	print $self->rooms->{$room}->name . "HUUU\n";
+}
+
 sub names {
 	my $self = shift;
 	my $client = shift;
 	my $room = shift // '#all';
-	if ($room eq $self->default_room->name) {
-		my $names = $self->default_room->names;
+	if (exists $self->rooms->{$room}) {
+		my $names = $self->rooms->{$room}->names;
 		$client->event(names => { room => $room, names => $names });
 	}
 	else {
