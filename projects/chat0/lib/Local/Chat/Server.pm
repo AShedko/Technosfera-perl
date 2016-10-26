@@ -16,10 +16,10 @@ use Socket;
 use Data::Dumper;
 use Time::HiRes qw(time);
 
-has 'version', is => 'rw', default => 1;
+has 'version', is => 'rw', default => 2;
 
 has 'host', is => 'rw', required => 1, default => '0.0.0.0';
-has 'port', is => 'rw', required => 1, default => 3456;
+has 'port', is => 'rw', required => 1, default => 3458;
 has 'fh', is => 'rw';
 has 'sel', is => 'rw', default => sub { IO::Select->new() };
 
@@ -209,7 +209,7 @@ sub randname {
 
 sub validate_nick {
 	my $self = shift;
-	my ( $client,$nick ) = @_;
+	my ( $client,$nick, $pass ) = @_;
 
 	my $current = $client->nick;
 
@@ -236,9 +236,10 @@ sub validate_nick {
 
 	$client->nick($nick);
 
-	# Notify client about it's nickname
-	$client->event("nick", { nick => $client->nick });
+	$client->pass($pass) if $client->version>=2;
 
+	# Notify client about it's nickname
+	$client->event("nick", { nick => $client->nick, pass => $client->pass});
 	return 1;
 }
 
