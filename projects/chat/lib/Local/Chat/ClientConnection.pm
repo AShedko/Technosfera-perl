@@ -6,7 +6,6 @@ use Mouse;
 BEGIN {if($]<5.018){package experimental; use warnings::register;}} no warnings 'experimental';
 
 use JSON::XS;
-use DDP;
 use Data::Dumper;
 use Scalar::Util qw(weaken);
 

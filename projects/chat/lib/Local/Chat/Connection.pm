@@ -7,7 +7,6 @@ BEGIN {if($]<5.018){package experimental; use warnings::register;}} no warnings 
 
 use JSON::XS;
 use AnyEvent::Util qw(fh_nonblocking);
-use DDP;
 use Data::Dumper;
 use Time::HiRes qw(sleep time);
 

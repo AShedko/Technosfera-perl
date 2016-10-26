@@ -10,7 +10,6 @@ use AnyEvent::Util qw(fh_nonblocking);
 use IO::Socket::INET;
 use IO::Select;
 use Socket;
-use DDP;
 use Data::Dumper;
 
 our $JSON = JSON::XS->new->utf8;
