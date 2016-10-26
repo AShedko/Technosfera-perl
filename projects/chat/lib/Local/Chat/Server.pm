@@ -169,6 +169,7 @@ sub accept_client {
 			$room->message({
 				from => $client->nick,
 				text => $data->{text},
+				#to => $room->name,
 			});
 		}
 	});

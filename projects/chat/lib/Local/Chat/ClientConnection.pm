@@ -165,14 +165,16 @@ sub packet {
 			$self->server->kill($pkt->{data}{user})
 		}
 		when ("join") {
-			#return $self->disconnect("data.join required") unless $data->{join};
-			#my $room = $data->{join};
 			my $room = $pkt->{data}{on};
 			if(exists $self->server->rooms->{$room}){
+				for (values $self->server->rooms) {
+					$_->remove($self);
+				}
 				$self->server->rooms->{$room}->join($self);
+				$self->rooms->{$room} = $self->server->rooms->{$room};
 			}
 			else {
-				return $self->disconnect("JOIN FAIL $pkt->{cmd}");
+				return $self->disconnect("no such room $pkt->{cmd}");
 			}
 		}
 		when ("create") {

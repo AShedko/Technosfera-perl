@@ -59,7 +59,7 @@ chomp($nick);
 $term->MinLine(1);
 
 init();
-
+my $room = "#all";
 my $server = Local::Chat::ServerConnection->new(nick => $nick, host => $ARGV[0] || 'localhost',
 	on_fd => sub {
 		my ($srv, $fd) = @_;
@@ -77,6 +77,7 @@ my $server = Local::Chat::ServerConnection->new(nick => $nick, host => $ARGV[0] 
 				}
 				elsif($1 eq 'join') {
 					$srv->join($2);
+					$room = $2;
 				}
 				elsif($1 eq 'create') {
 					$srv->create($2);
@@ -92,7 +93,7 @@ my $server = Local::Chat::ServerConnection->new(nick => $nick, host => $ARGV[0] 
 				}
 				return;
 			}
-			$srv->message({ text => $msg });
+			$srv->message({ text => $msg, to => $room });
 		}
 	},
 	on_message => sub {
