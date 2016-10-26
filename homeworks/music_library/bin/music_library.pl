@@ -13,7 +13,7 @@ use Getopt::Long;
 use Pod::Usage;
 use FindBin qw($RealBin);
 use lib "$RealBin/../lib";
-use Local::MusicLibrary; 
+use Local::MusicLibrary;
 
 my $param = {};
 GetOptions($param, 'band=s', 'year=i','track=s','format=s',
@@ -26,7 +26,7 @@ while (<>){
 
 exit(0) unless (@lines);
 
-unless (%{$param}) {pod2usage(2)};
+# unless (%{$param}) {pod2usage(2)};
 create_table(\@lines,$param);
 #use DDP;
 #p %{$param}
