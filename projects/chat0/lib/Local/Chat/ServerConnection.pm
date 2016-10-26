@@ -19,7 +19,7 @@ extends 'Local::Chat::Connection';
 
 has 'version', is => 'rw', default => 2;
 has 'host', is => 'rw', required => 1;
-has 'port', is => 'rw', required => 1, default => 3456;
+has 'port', is => 'rw', required => 1, default => 3458;
 has 'sel', is => 'rw', default => sub { IO::Select->new() };
 
 has 'connected',  is => 'rw';
@@ -35,16 +35,20 @@ has 'on_names',   is => 'rw';
 has 'on_join',    is => 'rw';
 has 'on_part',    is => 'rw';
 has 'on_rename',  is => 'rw';
+has 'pass',       is => 'rw';
 
 has 'nick',       is => 'rw', trigger => sub {
 	my $self = shift;
+	# print "NICK";
+	# p $self->pass;
 	if ($self->connected) {
+		print "NICK connected";
 		my %h = ( nick => $self->nick);
 		$h{pass}=$self->pass if $self->version>=2;
 		$self->command( 'nick', \%h );
 	}
 };
-has 'pass',       is => 'rw';
+
 
 sub ident {
 	my $self = shift;
@@ -61,7 +65,9 @@ sub connect {
 	) or die "Failed to connect to @{[ $self->host ]}:@{[ $self->port ]} $!\n";
 	$self->connected(1);
 	$self->fh( $fh );
-
+	if ($self->on_disconnect) {
+		return 0;
+	}
 	$self->sel->add($fh);
 	return 1;
 }
@@ -81,7 +87,7 @@ sub disconnect {
 	}
 	close $self->fh;
 	$self->on_disconnect and
-		$self->on_disconnect->($self);
+		$self->on_disconnect->($self);	
 }
 
 sub on_eof {
@@ -123,6 +129,7 @@ sub poll {
 sub packet {
 	my $self = shift;
 	my $pkt  = shift;
+	p $pkt;
 	if ( ref $pkt ne 'HASH' ) {
 		return $self->disconnect("packet is not a hash");
 	}
@@ -143,10 +150,11 @@ sub packet {
 		given ($pkt->{event}) {
 			when ("hello") {
 				if (length $self->nick) {
-					$self->command( 'nick', { nick => $self->nick } );
+					$self->command( 'nick', { nick => $self->nick, pass => $self->pass} );
 				}
 			}
 			when ("nick") {
+
 				# don't use accessor to not trigger event
 				if ($self->{nick} ne $pkt->{data}{nick}) {
 					$self->log("Server says our nickname should be $pkt->{data}{nick}");

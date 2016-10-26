@@ -17,6 +17,7 @@ my $term = Term::ReadLine->new('Simple perl chat');
 my $server = Local::Chat::ServerConnection->new(
 	nick => 'M',#'T'.int(rand(10000)),
 	host => 'localhost',
+	pass => 'password',
 	netlog => 1,
 	on_fd => sub {
 		my ($srv, $fd) = @_;
@@ -24,8 +25,7 @@ my $server = Local::Chat::ServerConnection->new(
 			my $msg = $term->readline();
                         exit unless defined $msg;
 			chomp($msg);
-			return unless length $msg;
-
+			return unless length $msg;			
 			if ($msg =~ m{^/(\w+)(?:\s+(\S+))*$}) {
 				if ($1 eq 'nick') {
 					$srv->nick($2);
@@ -62,4 +62,3 @@ my $server = Local::Chat::ServerConnection->new(
 
 $server->sel->add($term->IN);
 $server->poll;
-

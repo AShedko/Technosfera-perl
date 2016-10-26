@@ -119,6 +119,8 @@ sub packet {
 }
 
 sub command {
+	use Carp qw/cluck/;
+	cluck "qqq";
 	my $self = shift;
 	my $command = shift;
 	my $data = shift;
@@ -130,6 +132,7 @@ sub write {
 	my $arg = shift;
 	ref $arg or die "Bad argument to write";
     $arg->{time} ||= time;
+		p $arg;
 	my $wbuf = $JSON->encode($arg);
 	if ($self->netlog) {
 		printf STDERR "%s>> %s %s%s\n", (-t STDERR ? "\e[1;34m" : "" ), $self->ident, $wbuf, (-t STDERR ? "\e[0m" : "" );
@@ -138,7 +141,7 @@ sub write {
 	while (length $wbuf) {
 		my $wr = syswrite($self->fh, $wbuf);
 		if ($wr) {
-			# my $written = 
+			# my $written =
 			substr($wbuf,0,$wr,'');
 			# warn "written\n$written";
 		}

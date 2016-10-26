@@ -27,6 +27,7 @@ has 'delayed_events', is => 'rw', default => sub {[]};
 
 has 'peers', is => 'ro', default => sub {{}};
 has 'users', is => 'ro', default => sub {{}};
+has 'allusers', is => 'rw', default => sub {{}};
 
 has 'send_message_to_sender', is => 'rw', default => 1;
 
@@ -182,7 +183,7 @@ sub accept_client {
 		}
 
 		# Remove from nicknames
-		delete $self->users->{ $client->nick };
+		# delete $self->users->{ $client->nick };
 
 		# Remove from IO::Select
 		$self->sel->remove( $peer );
@@ -224,6 +225,12 @@ sub validate_nick {
 			return;
 		}
 
+		if ($pass ne $self->users->{$nick}->{'pass'}){
+			# No current, no random. Sorry, closing.
+			$client->disconnect("Failed to accept password");						
+			return;
+		}
+
 		if( my $new = $self->randname(1,$nick) ) {
 			$self->log("Nickname $nick is taken. Offer $new");
 			$nick = $new;
@@ -232,6 +239,7 @@ sub validate_nick {
 			$client->disconnect("Failed to accept nickname");
 			return;
 		}
+
 	}
 
 	$client->nick($nick);
@@ -239,34 +247,10 @@ sub validate_nick {
 	$client->pass($pass) if $client->version>=2;
 
 	# Notify client about it's nickname
+	# print $client->pass;
+	$self->allusers->{$client->nick} = $client->pass;
 	$client->event("nick", { nick => $client->nick, pass => $client->pass});
 	return 1;
-}
-
-sub validate_pass {
-	my $self = shift;
-	my ( $client, $nick, $pass ) = @_;
-
-	my $current = $client->nick;
-
-	# Try to autogenerate pass if it is already exists
-	if (exists $self->users->{$nick}) {
-		if ($pass eq $self->users->{$nick}->{'pass'}){
-			$self->log("Pass OK");
-			return 1;
-		}
-		$client->disconnect("Failed to accept pass");
-		return;
-
-	}
-	else{
-		$client->pass($pass);
-
-		# Notify client about it's pass
-		$client->event("pass", { pass => $client->pass });
-
-		return 1;
-	}
 }
 
 sub all {

@@ -119,6 +119,7 @@ my $server = Local::Chat::ServerConnection->new(nick => $nick,pass=> $pass, host
 	},
 	on_error => sub {
 		my ($srv, $message) = @_;
+		exit;
 		add_message( "\e[31;1m"."Error"."\e[0m".": $message->{text}\n" );
 	}
 );
@@ -126,15 +127,18 @@ my $server = Local::Chat::ServerConnection->new(nick => $nick,pass=> $pass, host
 $server->sel->add($term->IN);
 my $last_error = time();
 while () {
+	my $d=12;
 	eval {
-		$server->connect;
+		warn $server->connect;
 	};
+	if ($d==0){exit 1;}
 	if ($@) {
 		if (time() - $last_error > 60) {
 			add_message("Ожидание сервера");
 			$last_error = time();
 		}
 		sleep(1);
+		exit "bla";
 	}
 	else {
 		$server->poll();
