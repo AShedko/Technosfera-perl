@@ -164,6 +164,22 @@ sub packet {
 		when ("kill") {
 			$self->server->kill($pkt->{data}{user})
 		}
+		when ("join") {
+			my $room = $pkt->{data}{on};
+			if(exists $self->server->rooms->{$room}){
+				for (values $self->server->rooms) {
+					$_->remove($self);
+				}
+				$self->server->rooms->{$room}->join($self);
+				$self->rooms->{$room} = $self->server->rooms->{$room};
+			}
+			else {
+				return $self->disconnect("no such room $pkt->{cmd}");
+			}
+		}
+		when ("create") {
+			$self->server->create($pkt->{data}{on});
+		}
 		default {
 			return $self->disconnect("unknown command $pkt->{cmd}");
 		}

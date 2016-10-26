@@ -188,6 +188,17 @@ sub names {
 	$self->command( 'names' => { on => $on } );
 }
 
+sub join {
+	my $self = shift;
+	my $on = shift;
+	$self->command( 'join' => { on => $on } );
+}
+
+sub create {
+	my $self = shift;
+	my $on = shift;
+	$self->command( 'create' => { on => $on } );
+}
 sub kill {
 	my $self = shift;
 	my $user = shift;
