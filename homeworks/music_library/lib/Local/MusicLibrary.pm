@@ -13,6 +13,7 @@ BEGIN {
 use Exporter 'import';
 
 use Local::ParameterProcesser;
+use Local::Printer;
 
 our @EXPORT  = qw/create_table/;
 our $VERSION = '1.00';
@@ -68,50 +69,7 @@ sub create_table($$) {
         );
     }
     (my $goalList, my @result) = process_params(\@table,$params);
-    printer( \@result, @$goalList);
-}
-
-sub get_sizes( $ ) {
-    my $table = [];
-    ($table) = @_;
-    my %sizes = (
-        band   => 1,
-        track  => 1,
-        album  => 1,
-        format => 1,
-        year   => 1
-    );
-    for my $row (@$table) {
-        for my $k ( keys %$row ) {
-            my $v = $row->{$k};
-            if ( length $sizes{$k} < length $v ) {
-              $sizes{$k} = length $v
-            };
-        }
-    }
-    %sizes;
-}
-
-use List::Util qw(reduce);
-
-sub printer( $$ ) {
-    (my $table, my $goalList) = @_;
-#    p $table;
-    my %sizes = get_sizes($table);
-    p %sizes;
-    my $len = reduce {$a+$b} values %sizes;
-    my $hline = ( "-" x ($len));
-    print "/$hline\\\n";
-    for my $row (@$table) {
-        print "|";
-
-        unless ($row == $$table[-1]){
-          print "\n|" . ( "-" x $len ) . "|\n";
-        }
-        else{
-          print "|\n\\$hline/\n";
-        }
-    }
+    printer( \@result, $goalList);
 }
 
 1;

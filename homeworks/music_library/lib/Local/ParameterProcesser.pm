@@ -35,24 +35,29 @@ sub process_params($$){
     my $params = {};
     ($table, $params) = @_;
     my @goalList=();
+    my $hasGoals ='';
     for my $opt (keys %$params){
         given ($opt) {
-            when (['band','album','track','format','year']){
-                grep {$_->{$opt} eq $params->{$opt}} @$table;
+            when (['band','album','track','format']){
+                @$table = grep {$_->{$opt} eq $params->{$opt}} @$table;
+            }
+            when ('year'){ #ugly, but more efficient, probably
+                @$table = grep {$_->{$opt} == $params->{$opt}} @$table;
             }
             when('sort'){
                 my $k = $params->{$opt};
                 if ($k eq 'year'){
-                    sort {0+$a->{$k}<=>0+$b->{$k}} @$table;
+                    @$table = sort {0+$a->{$k}<=>0+$b->{$k}} @$table;
                 }
-                else{sort {$a->{$k}<=>$b->{$k}} @$table;}
+                else{@$table = sort {$a->{$k} cmp $b->{$k}} @$table;}
             }
             when('columns'){
                 @goalList = split m/\,/, $params->{$opt};
+                $hasGoals=1;
             }
         }
     }
-    unless (@goalList) { @goalList = ('year','band','album','track','format'); }
+    unless ($hasGoals) { @goalList = qw( band year album track format); }
     return (\@goalList, @$table );
 }
 
