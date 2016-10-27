@@ -16,10 +16,10 @@ use Socket;
 use Data::Dumper;
 use Time::HiRes qw(time);
 
-has 'version', is => 'rw', default => 1;
+has 'version', is => 'rw', default => 2;
 
 has 'host', is => 'rw', required => 1, default => '0.0.0.0';
-has 'port', is => 'rw', required => 1, default => 3456;
+has 'port', is => 'rw', required => 1, default => 3458;
 has 'fh', is => 'rw';
 has 'sel', is => 'rw', default => sub { IO::Select->new() };
 
@@ -27,6 +27,7 @@ has 'delayed_events', is => 'rw', default => sub {[]};
 
 has 'peers', is => 'ro', default => sub {{}};
 has 'users', is => 'ro', default => sub {{}};
+has 'allusers', is => 'rw', default => sub {{}};
 
 has 'send_message_to_sender', is => 'rw', default => 1;
 
@@ -37,8 +38,6 @@ has 'default_room', is => 'ro', default => sub {
 		server => $self,
 	);
 };
-
-has 'rooms', is => 'rw', default => sub{{}};
 
 sub BUILD {
 	my $self = shift;
@@ -52,7 +51,6 @@ sub BUILD {
 	fh_nonblocking($server,1);
 	$self->fh($server);
 	$self->sel->add($server);
-	$self->rooms->{$self->default_room->name} = $self->default_room;
 	printf "Server listening on %s:%s\n", $server->sockhost, $server->sockport;
 }
 
@@ -139,7 +137,7 @@ sub accept_client {
 		fh     => $peer,
 		server => $self,
 		netlog => 1,
-		nick   => $nick, 
+		nick   => $nick,
 		active => time(),
 	);
 	$self->sel->add( $peer );
@@ -169,7 +167,6 @@ sub accept_client {
 			$room->message({
 				from => $client->nick,
 				text => $data->{text},
-				#to => $room->name,
 			});
 		}
 	});
@@ -181,12 +178,12 @@ sub accept_client {
 		delete $self->peers->{ $remote };
 
 		# Remove from rooms
-		for my $room ( values %{$self->rooms} ) {
+		for my $room ( $self->default_room ) {
 			$room->remove( $client );
 		}
 
 		# Remove from nicknames
-		delete $self->users->{ $client->nick };
+		# delete $self->users->{ $client->nick };
 
 		# Remove from IO::Select
 		$self->sel->remove( $peer );
@@ -213,7 +210,7 @@ sub randname {
 
 sub validate_nick {
 	my $self = shift;
-	my ( $client,$nick ) = @_;
+	my ( $client,$nick, $pass ) = @_;
 
 	my $current = $client->nick;
 
@@ -228,20 +225,31 @@ sub validate_nick {
 			return;
 		}
 
-		if( my $new = $self->randname(1,$nick) ) {
-			$self->log("Nickname $nick is taken. Offer $new");
-			$nick = $new;			
-		} else {
-			# No current, no random. Sorry, closing.
-			$client->disconnect("Failed to accept nickname");
+		if ($pass ne $self->users->{$nick}->{'pass'}){
+			$client->disconnect("Failed to accept password");
 			return;
+		}
+
+		if ($client->version==1){
+			if( my $new = $self->randname(1,$nick) ) {
+				$self->log("Nickname $nick is taken. Offer $new");
+				$nick = $new;
+			} else {
+				# No current, no random. Sorry, closing.
+				$client->disconnect("Failed to accept nickname");
+				return;
+			}
 		}
 	}
 
 	$client->nick($nick);
 
+	$client->pass($pass) if $client->version>=2;
+
 	# Notify client about it's nickname
-	$client->event("nick", { nick => $client->nick });
+	# print $client->pass;
+	$self->allusers->{$client->nick} = $client->pass;
+	$client->event("nick", { nick => $client->nick, pass => $client->pass});
 	return 1;
 }
 
@@ -260,24 +268,12 @@ sub event {
 	}
 }
 
-sub create {
-	my ($self, $room) = @_;
-	unless (exists $self->rooms->{$room})
-	{
-		$self->rooms->{$room} = Local::Chat::Room->new(
-			name => $room,
-			server => $self,
-		);
-	}
-	print $self->rooms->{$room}->name . "HUUU\n";
-}
-
 sub names {
 	my $self = shift;
 	my $client = shift;
 	my $room = shift // '#all';
-	if (exists $self->rooms->{$room}) {
-		my $names = $self->rooms->{$room}->names;
+	if ($room eq $self->default_room->name) {
+		my $names = $self->default_room->names;
 		$client->event(names => { room => $room, names => $names });
 	}
 	else {

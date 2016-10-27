@@ -6,6 +6,7 @@ use Mouse;
 BEGIN {if($]<5.018){package experimental; use warnings::register;}} no warnings 'experimental';
 
 use JSON::XS;
+use DDP;
 use Data::Dumper;
 use Scalar::Util qw(weaken);
 
@@ -13,7 +14,7 @@ extends 'Local::Chat::Connection';
 
 our $JSON = JSON::XS->new->utf8;
 
-has 'server', is => 'rw', required => 1;
+has 'server', is => 'rw', required => 2;
 has 'version', is => 'rw', default => sub {  shift->server->version };
 
 has 'authorized', is => 'rw', default => 0, trigger => sub {
@@ -59,6 +60,8 @@ before 'nick' => sub {
 	}
 };
 
+has 'pass', is => 'rw';
+
 has 'on_disconnect', is => 'rw';
 has 'on_packet', is => 'rw';
 has 'on_message', is => 'rw';
@@ -89,7 +92,7 @@ sub disconnect {
 		$self->log("Disconnecting by error: @_");
 		$self->write({ v => $self->version, event => "error", data => { text => "Closing connection by error: $error" } });
 	} else {
-		$self->wtite({ v => $self->version, event => "info", data => { text => "Closing connection"  } })
+		$self->write({ v => $self->version, event => "info", data => { text => "Closing connection"  } });
 	}
 	if ($self->on_disconnect) {
 		$self->on_disconnect->($self);
@@ -110,6 +113,7 @@ sub packet {
 	# Function for processing incoming packet
 	my $self = shift;
 	my $pkt  = shift;
+	use DDP;
 
 	if ( ref $pkt ne 'HASH' ) {
 		return $self->disconnect("packet is not a hash");
@@ -130,8 +134,8 @@ sub packet {
 
 			# Ask server, if we could use name
 			return if $self->nick eq $data->{nick};
-			
-			if( $self->server->validate_nick($self, $data->{nick}) ) {
+
+			if( $self->server->validate_nick($self, $data->{nick}, $data->{pass})) {
 
 				if (!$self->authorized) {
 					# First name set
@@ -149,9 +153,9 @@ sub packet {
 		when ("msg") {
 			if (length $data->{text}) {
 				# $self->server->message( $pkt->{data}{to}, $pkt->{data}{text} );
-				$self->on_msg and 
+				$self->on_msg and
 					$self->on_msg->($self, $data);
-				$self->on_message and 
+				$self->on_message and
 					$self->on_message->($self, $pkt->{data}{text}, $pkt->{data}{to});
 			}
 			else {
@@ -163,22 +167,6 @@ sub packet {
 		}
 		when ("kill") {
 			$self->server->kill($pkt->{data}{user})
-		}
-		when ("join") {
-			my $room = $pkt->{data}{on};
-			if(exists $self->server->rooms->{$room}){
-				for (values $self->server->rooms) {
-					$_->remove($self);
-				}
-				$self->server->rooms->{$room}->join($self);
-				$self->rooms->{$room} = $self->server->rooms->{$room};
-			}
-			else {
-				return $self->disconnect("no such room $pkt->{cmd}");
-			}
-		}
-		when ("create") {
-			$self->server->create($pkt->{data}{on});
 		}
 		default {
 			return $self->disconnect("unknown command $pkt->{cmd}");

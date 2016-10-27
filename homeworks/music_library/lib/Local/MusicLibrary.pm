@@ -67,8 +67,8 @@ sub create_table($$) {
             }
         );
     }
-    (my @result, my @goalList) = process_params(\@table,$params);
-    printer( \@result, \@goalList);
+    (my $goalList, my @result) = process_params(\@table,$params);
+    printer( \@result, @$goalList);
 }
 
 sub get_sizes( $ ) {
@@ -85,7 +85,7 @@ sub get_sizes( $ ) {
         for my $k ( keys %$row ) {
             my $v = $row->{$k};
             if ( length $sizes{$k} < length $v ) {
-              $sizes{$k} = $v
+              $sizes{$k} = length $v
             };
         }
     }
@@ -96,17 +96,20 @@ use List::Util qw(reduce);
 
 sub printer( $$ ) {
     (my $table, my $goalList) = @_;
+#    p $table;
     my %sizes = get_sizes($table);
-    my $hline = ( "-" x (reduce {$a+$b} values %sizes));
+    p %sizes;
+    my $len = reduce {$a+$b} values %sizes;
+    my $hline = ( "-" x ($len));
     print "/$hline\\\n";
     for my $row (@$table) {
         print "|";
 
         unless ($row == $$table[-1]){
-          print "\n|" . ( "-" x 80 ) . "|\n";
+          print "\n|" . ( "-" x $len ) . "|\n";
         }
         else{
-          print "\n\\$hline/\n";
+          print "|\n\\$hline/\n";
         }
     }
 }

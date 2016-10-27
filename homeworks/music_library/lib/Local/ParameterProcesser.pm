@@ -53,7 +53,7 @@ sub process_params($$){
         }
     }
     unless (@goalList) { @goalList = ('year','band','album','track','format'); }
-    return (@$table, @goalList,);
+    return (\@goalList, @$table );
 }
 
 1;

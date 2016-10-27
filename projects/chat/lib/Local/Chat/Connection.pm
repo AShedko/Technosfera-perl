@@ -7,8 +7,10 @@ BEGIN {if($]<5.018){package experimental; use warnings::register;}} no warnings 
 
 use JSON::XS;
 use AnyEvent::Util qw(fh_nonblocking);
+use DDP;
 use Data::Dumper;
 use Time::HiRes qw(sleep time);
+use Carp qw/cluck/;
 
 use constant MAXBUF => 1024*1024;
 
@@ -118,6 +120,7 @@ sub packet {
 }
 
 sub command {
+	# cluck "qqq";
 	my $self = shift;
 	my $command = shift;
 	my $data = shift;
@@ -129,15 +132,17 @@ sub write {
 	my $arg = shift;
 	ref $arg or die "Bad argument to write";
     $arg->{time} ||= time;
+		# p $arg;
 	my $wbuf = $JSON->encode($arg);
 	if ($self->netlog) {
 		printf STDERR "%s>> %s %s%s\n", (-t STDERR ? "\e[1;34m" : "" ), $self->ident, $wbuf, (-t STDERR ? "\e[0m" : "" );
 	}
 	$wbuf .= "\n";
 	while (length $wbuf) {
+		cluck "qqq";
 		my $wr = syswrite($self->fh, $wbuf);
 		if ($wr) {
-			# my $written = 
+			# my $written =
 			substr($wbuf,0,$wr,'');
 			# warn "written\n$written";
 		}

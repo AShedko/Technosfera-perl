@@ -10,15 +10,16 @@ use AnyEvent::Util qw(fh_nonblocking);
 use IO::Socket::INET;
 use IO::Select;
 use Socket;
+use DDP;
 use Data::Dumper;
 
 our $JSON = JSON::XS->new->utf8;
 
 extends 'Local::Chat::Connection';
 
-has 'version', is => 'rw', default => 1;
+has 'version', is => 'rw', default => 2;
 has 'host', is => 'rw', required => 1;
-has 'port', is => 'rw', required => 1, default => 3456;
+has 'port', is => 'rw', required => 1, default => 3458;
 has 'sel', is => 'rw', default => sub { IO::Select->new() };
 
 has 'connected',  is => 'rw';
@@ -34,13 +35,20 @@ has 'on_names',   is => 'rw';
 has 'on_join',    is => 'rw';
 has 'on_part',    is => 'rw';
 has 'on_rename',  is => 'rw';
+has 'pass',       is => 'rw';
 
 has 'nick',       is => 'rw', trigger => sub {
 	my $self = shift;
+	print "NICK";
+	p $self->pass;
 	if ($self->connected) {
-		$self->command( 'nick', { nick => $self->nick } );
+		print "NICK connected";
+		my %h = ( nick => $self->nick);
+		$h{pass}=$self->pass if $self->version>=2;
+		$self->command( 'nick', \%h );
 	}
 };
+
 
 sub ident {
 	my $self = shift;
@@ -83,7 +91,7 @@ sub disconnect {
 sub on_eof {
 	my $self = shift;
 	#warn "Server connection closed";
-	$self->connected(0);	
+	$self->connected(0);
 	$self->on_disconnect and
 		$self->on_disconnect->($self);
 }
@@ -119,6 +127,7 @@ sub poll {
 sub packet {
 	my $self = shift;
 	my $pkt  = shift;
+	p $pkt;
 	if ( ref $pkt ne 'HASH' ) {
 		return $self->disconnect("packet is not a hash");
 	}
@@ -139,10 +148,11 @@ sub packet {
 		given ($pkt->{event}) {
 			when ("hello") {
 				if (length $self->nick) {
-					$self->command( 'nick', { nick => $self->nick } );
+					$self->command( 'nick', { nick => $self->nick, pass => $self->pass} );
 				}
 			}
 			when ("nick") {
+
 				# don't use accessor to not trigger event
 				if ($self->{nick} ne $pkt->{data}{nick}) {
 					$self->log("Server says our nickname should be $pkt->{data}{nick}");
@@ -159,9 +169,9 @@ sub packet {
 				}
 			}
 			when ("msg") {
-				$self->on_msg and 
+				$self->on_msg and
 					$self->on_msg->($self, $data);
-				$self->on_message and 
+				$self->on_message and
 					$self->on_message->($self, $pkt->{data});
 			}
 			default {
@@ -188,17 +198,6 @@ sub names {
 	$self->command( 'names' => { on => $on } );
 }
 
-sub join {
-	my $self = shift;
-	my $on = shift;
-	$self->command( 'join' => { on => $on } );
-}
-
-sub create {
-	my $self = shift;
-	my $on = shift;
-	$self->command( 'create' => { on => $on } );
-}
 sub kill {
 	my $self = shift;
 	my $user = shift;
@@ -207,4 +206,3 @@ sub kill {
 
 
 1;
-
