@@ -2,18 +2,11 @@
 use strict;
 use warnings;
 use 5.20.0;
-BEGIN{
-    if ($] < 5.018) {
-        package experimental;
-        use warnings::register;
-    }
-}
-
 use Getopt::Long;
 use Pod::Usage;
 use FindBin qw($RealBin);
 use lib "$RealBin/../lib";
-use Local::MusicLibrary;
+use Local::MusicLibrary 'create_table';
 
 my $param = {};
 GetOptions($param, 'band=s', 'year=i','track=s','format=s',

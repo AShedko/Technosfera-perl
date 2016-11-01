@@ -11,7 +11,7 @@ sub parse_json {
 	
 	use JSON::XS;
 	
-	# return JSON::XS->new->utf8->decode($source);
+	return JSON::XS->new->utf8->decode($source);
 	return {};
 }
 

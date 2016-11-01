@@ -2,21 +2,17 @@ package Local::MusicLibrary;
 
 use strict;
 use warnings;
+use v5.020;
 
-BEGIN {
-    if ( $] < 5.018 ) {
+use DDP;
 
-        package experimental;
-        use warnings::register;
-    }
-}
+use Local::MusicLibrary::ParameterProcesser qw|process_params|;
+use Local::MusicLibrary::Printer qw|printer|;
+
 use Exporter 'import';
 
-use Local::ParameterProcesser;
-use Local::Printer;
-
-our @EXPORT  = qw/create_table/;
-our $VERSION = '1.00';
+our @EXPORT_OK = qw/create_table/;
+our $VERSION = '1.10';
 
 =encoding utf8
 
@@ -34,16 +30,14 @@ Version 1.00
 
 =cut
 
-use DDP;
-
 sub create_table($$) {
-    my $lines  = [];
-    my $params = {};
-    ( $lines, $params ) = @_;
+    (my $lines, my $params ) = @_;
+    $lines  ||= [];
+    $params ||= {};
     my @table;
     for ( @{$lines} ) {
         chomp;
-        $_ =~ m{
+        $_ =~ m|
         ^
             \. /
             (?<band>[^/]+)
@@ -56,7 +50,7 @@ sub create_table($$) {
             \.
             (?<format>[^\.]+)
             $
-        }x;
+        |x;
         push(
             @table,
             {
@@ -68,6 +62,7 @@ sub create_table($$) {
             }
         );
     }
+    p (@EXPORT_OK);
     (my $goalList, my @result) = process_params(\@table,$params);
     printer( \@result, $goalList);
 }

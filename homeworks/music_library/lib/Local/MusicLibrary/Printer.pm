@@ -1,20 +1,13 @@
-package Local::Printer;
+package Local::MusicLibrary::Printer;
 
 use strict;
 use warnings;
-use v5.018;
-
-BEGIN{
-    if ($] < 5.018) {
-        package experimental;
-        use warnings::register;
-    }
-}
+use v5.020;
 
 no warnings 'experimental';
 use Exporter 'import';
 
-our @EXPORT  = qw/printer/;
+our @EXPORT_OK  = qw/printer/;
 
 =encoding utf8
 
@@ -31,8 +24,7 @@ Prints a table in a specific format
 =cut
 
 sub get_sizes( $ ) {
-    my $table = [];
-    ($table) = @_;
+    (my $table) = @_;
     my %sizes = (
         band   => 1,
         track  => 1,
