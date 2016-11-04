@@ -9,7 +9,7 @@ use JSON::XS;
 
 our $JSON = JSON::XS->new->utf8;
 
-use Test::More tests => 33;
+use Test::More tests => 35;
 BEGIN { use_ok('Local::JSONParser') };
 
 diag "Positive tests";
