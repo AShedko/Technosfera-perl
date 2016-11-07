@@ -13,10 +13,14 @@ use DDP;
 
 sub _fail { die __PACKAGE__.": $_[0] at offset ".pos()."\n" }
 
+# The {..} block in regex returns it`s value into $^R
+# So $^R can be used to parse the JSON as it is being
+# matched.
+# During execution, $^R is a nested list
 
 our $FROM_JSON = qr{
 (?:
-    (?&VALUE) (?{ $_ = $^R->[1] })
+    (?&VALUE) (?{$_ = $^R->[1] })
 |
     \z (?{ _fail "Unexpected end of input" })
 |
@@ -97,17 +101,18 @@ our $FROM_JSON = qr{
   |
       null (?{ [$^R, undef] })
   )
+    #(?{p $^R;})
   \s*
 )
 (?<STRING>
   (
     "
     (?:
-        [^\\"]+
+        [^\\"]+ # non-special symbols
     |
-        \\ ["\\/bfnrt]
+        \\ ["\\/bfnrt] #control symbols
     |
-      \\ u [0-9a-fA-f]{4}
+      \\ u [0-9a-fA-f]{4} # unicode codes
     |
         \\ . (?{ _fail "Invalid string escape character" })
     )*
@@ -118,7 +123,7 @@ our $FROM_JSON = qr{
     )
   )
   (?{ [$^R, substr(_decode_str($^N),1,-1)]})
-)
+)       # $^N - last assigned capture
 (?<NUMBER>
   (
     -?
@@ -142,6 +147,9 @@ my %escape_codes = (
 
 sub _decode_str {
     my $str = shift;
+    #           2-nd capture  3-d capture        4-d capture
+    #               ||            ||                 ||
+    #               \/            \/                 \/
     $str =~ s[(\\(?:([0-7]{1,3})|x([0-9A-Fa-f]{1,2})|(.)))]
              [defined($2) ? chr(oct $2) :
                   defined($3) ? chr(hex $3) :
@@ -154,7 +162,7 @@ sub _decode_str {
 
 sub parse_json {
   local $_ = shift;
-  local $^R;
+  local $^R; # Result of evaluation in REGEX
   eval { m{\A$FROM_JSON\z}; } and return $_;
   die $@ if $@;
   return 'no match';
