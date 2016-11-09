@@ -8,6 +8,7 @@ use utf8;
 our @EXPORT_OK = qw( parse_json );
 our @EXPORT = qw( parse_json );
 use DDP;
+use Encode qw/encode decode/;
 #use re 'debug';
 
 
@@ -20,7 +21,13 @@ sub _fail { die __PACKAGE__.": $_[0] at offset ".pos()."\n" }
 
 our $FROM_JSON = qr{
 (?:
+    ^(?: (?&NUMBER)|(?&STRING)|true|false|null)$ (?{_fail "no non-refs!"})
+|
+
     (?&VALUE) (?{$_ = $^R->[1] })
+#    (?&ARRAY) (?{$_ = $^R->[1] })
+#|
+#    (?&OBJECT) (?{$_ = $^R->[1] })
 |
     \z (?{ _fail "Unexpected end of input" })
 |
@@ -147,7 +154,7 @@ my %escape_codes = (
 
 sub _decode_str {
     my $str = shift;
-    #           2-nd capture  3-d capture        4-d capture
+    #           2-nd capture  3-d capture        4-th capture
     #               ||            ||                 ||
     #               \/            \/                 \/
     $str =~ s[(\\(?:([0-7]{1,3})|x([0-9A-Fa-f]{1,2})|(.)))]
@@ -155,7 +162,15 @@ sub _decode_str {
                   defined($3) ? chr(hex $3) :
                       $escape_codes{$4} ? $escape_codes{$4} :
               $1]eg;
-    $str =~ s/\\u([0-9A-Fa-f]{4})/\\x\{$1\}/g;
+
+    $str =~ s[\\u([0-9A-Fa-f]{4})][ chr hex $1]eg;
+    #say $str;
+    #$str =~ s/\\\\x/'\x'/ge;
+    #$str =~ s/@/'\@'/ge;
+#    for my $c (split //,$str){
+     #   print $c."_";
+    #}
+#    $str = decode('utf8', $str);
     $str;
 }
 
@@ -163,6 +178,7 @@ sub _decode_str {
 sub parse_json {
   local $_ = shift;
   local $^R; # Result of evaluation in REGEX
+  $_ = decode "utf-8", $_;
   eval { m{\A$FROM_JSON\z}; } and return $_;
   die $@ if $@;
   return 'no match';

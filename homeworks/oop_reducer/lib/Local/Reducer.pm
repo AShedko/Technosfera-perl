@@ -2,6 +2,8 @@ package Local::Reducer;
 
 use strict;
 use warnings;
+use Mouse;
+use list 'reduce';
 
 =encoding utf8
 
