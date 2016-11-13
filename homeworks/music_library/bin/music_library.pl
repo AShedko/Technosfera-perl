@@ -21,9 +21,6 @@ exit(0) unless (@lines);
 
 # unless (%{$param}) {pod2usage(2)};
 create_table(\@lines,$param);
-#use DDP;
-#p %{$param}
-#print("_$param->{band}");
 
 __END__
 =head1 NAME
