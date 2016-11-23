@@ -1,9 +1,19 @@
 package Local::Reducer;
 
+use 5.022;
 use strict;
 use warnings;
 use Mouse;
-use list 'reduce';
+
+use Local::Source;
+use Local::Row;
+use DDP;
+
+has 'version', is 'rw';
+has 'source', is 'rw', isa 'Source';
+has 'initial_value', is 'rw';
+has 'row_class', isa 'Row' is  'rw';
+our $VERSION = '1.00';
 
 =encoding utf8
 
@@ -17,10 +27,17 @@ Version 1.00
 
 =cut
 
-our $VERSION = '1.00';
-
 =head1 SYNOPSIS
 
 =cut
+
+sub BUILD {
+    (my $self,my $src, my $rowcl, my $initial) = @_;
+    $self->source = $src;
+    $self->initial_value = $initial;
+    $self->row_class = $rowcl;
+    p $self;
+    return;
+}
 
 1;

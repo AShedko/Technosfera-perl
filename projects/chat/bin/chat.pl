@@ -103,7 +103,7 @@ my $server = Local::Chat::ServerConnection->new(nick => $nick,pass=> $pass, host
 	},
 	on_join => sub {
 		my ($srv, $message) = @_;
-		add_message("\e[34m" . ">> Пользователь " . $message->{nick} . " присоеденился" . "\e[0m");
+		add_message("\e[34m" . ">> Пользователь " . $message->{nick} . " присоединился" . "\e[0m");
 	},
 	on_part => sub {
 		my ($srv, $message) = @_;

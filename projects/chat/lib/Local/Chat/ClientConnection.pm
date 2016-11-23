@@ -113,7 +113,6 @@ sub packet {
 	# Function for processing incoming packet
 	my $self = shift;
 	my $pkt  = shift;
-	use DDP;
 
 	if ( ref $pkt ne 'HASH' ) {
 		return $self->disconnect("packet is not a hash");
