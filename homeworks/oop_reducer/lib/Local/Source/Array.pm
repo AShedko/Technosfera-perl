@@ -18,7 +18,7 @@ Version 1.00
 =cut
 
 has array => (is => 'ro');
-my $current_index = 0;
+has current_index =>( is=> 'ro', default => 0);
 our $VERSION = '1.00';
 
 =head1 SYNOPSIS
@@ -27,15 +27,10 @@ our $VERSION = '1.00';
 
 sub next{
   my $self = shift;
-  if ($current_index>= scalar (@{$self->array})) {return;}
+  my $ind = \$self->current_index;
+  if ($$ind>= scalar (@{$self->array})) {return;}
   # p $self->array;
-  $self->array->[$current_index++];
+  $self->array->[$$ind++];
 }
-
-sub BUILD {
-    (my $self) = @_;
-    return;
-}
-
 
 1;

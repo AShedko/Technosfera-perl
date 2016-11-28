@@ -36,11 +36,4 @@ sub next{
   chomp $line;
   $line;
 }
-
-sub BUILD {
-    my ($self) = @_;
-    return;
-}
-
-
 1;

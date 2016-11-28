@@ -22,7 +22,8 @@ our $VERSION = '1.00';
 
 =head1 NAME
 
-Local::Reducer - base abstract reducer
+Local::Reducer::Sum — суммирует значение поля,
+указанного в параметре `field` конструктора, каждой строки лога.
 
 =head1 VERSION
 
@@ -32,11 +33,13 @@ Version 1.00
 
 =head1 SYNOPSIS
 
+Local::Ruducer::Sum -- Sums the values in field
+
 =cut
 
 sub step {
   my ($self,$item) = @_;
-  my $elem = $item->get($self->field,0);  
+  my $elem = $item->get($self->field,0);
   $self->{reduced} = $self->{reduced} + 0+ $elem;
 }
 

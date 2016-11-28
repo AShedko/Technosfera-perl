@@ -25,10 +25,4 @@ our $VERSION = '1.00';
 
 sub next{}
 
-sub BUILD {
-    (my $self) = @_;
-    return;
-}
-
-
 1;

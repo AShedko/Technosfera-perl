@@ -16,6 +16,11 @@ has source =>  (is =>'rw');
 has initial_value =>( is => 'rw');
 has row_class => ( is => 'rw');
 has field => (is => 'ro');
+has reduced => (is =>'rw',
+          isa => "Local::Reducer::MinMaxAvgObj",
+          # default => 1);
+          default => sub{return bless {avg => undef, min => undef, max => undef},
+           "Local::Reducer::MinMaxAvgObj"});
 
 our $VERSION = '1.00';
 
@@ -34,7 +39,7 @@ Version 1.00
 =cut
 
 =head1 SYNOPSIS
-Local::Reducer::MaxDiff— maximal difference between top and bottom fields
+`Local::Reducer::MinMaxAvg` — считает минимум, максимум и среднее
 =cut
 
 sub max {
@@ -48,7 +53,7 @@ sub min {
 sub step {
   my ($self,$item) = @_;
   my $elem = $item->get($self->field,0);
-  my $obj = $self->{reduced};
+  my $obj = $self->reduced;
   unless (defined $obj->{sum}) {
       $obj->{sum} = $elem;
       $obj->{min} = $elem;
@@ -63,13 +68,11 @@ sub step {
     $obj->{max} = max $obj->{max} , $elem;
     $obj->{avg} = $obj->{sum} / $obj->{count};
   }
-  p $obj->{count};
-  return $self->{reduced};
+  return $self->reduced;
 }
 
-sub BUILD {
-  my ($self) = @_;
-  $self->{reduced} = bless {avg => undef, min => undef, max => undef}, "Local::Reducer::MinMaxAvgObj";
-}
+# sub BUILD {
+#   my ($self) = @_;
+# }
 
 1;

@@ -33,7 +33,10 @@ Version 1.00
 =cut
 
 =head1 SYNOPSIS
-Local::Reducer::MaxDiff— maximal difference between top and bottom fields
+
+Local::Reducer::MaxOverallDiff
+выясняет максимальную разницу между полями, указанными в
+параметрах `top` и `bottom` конструктора, среди всех строк лога.
 =cut
 my ($maxtop,$maxbot,$mintop,$minbot);
 

@@ -27,13 +27,7 @@ our $VERSION = '1.00';
 =cut
 
 sub get {
-  my ($self,$name, $default) = @_;
-  my @pairs = split ',', $self->str;
-  for (@pairs){
-    $_ =~ /(.*):(.*)/;
-    if ($1 eq $name) {return $2;};
-  }
-  return $default;
+
 }
 
 sub BUILD {

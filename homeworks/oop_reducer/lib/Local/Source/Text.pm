@@ -20,8 +20,8 @@ Version 1.00
 
 has text => (is => 'ro');
 has delimiter => (is => 'ro', default => '\n');
-my @elems;
-my $current_index = 0;
+has elems => (is => 'rw', default => sub {[]});
+has current_index => (is => 'rw', default =>0);
 our $VERSION = '1.00';
 
 =head1 SYNOPSIS
@@ -33,13 +33,17 @@ or specified by delimiter
 
 sub next{
   my $self = shift;
-  if ($current_index>= scalar (@elems)) {return;}
-  $elems[$current_index++];
+  my $aref = $self->elems;
+  my $ind  = \$self->current_index;
+  if ($self->current_index >= scalar (@{$self->elems})) {return;}
+  $aref->[$$ind++];
 }
 
 sub BUILD {
     (my $self) = @_;
-    @elems = split $self->delimiter,$self->text;
+    my @ar = split $self->delimiter, $self->text;
+    my $aref = $self->elems;
+    @$aref = @ar;
     return;
 }
 

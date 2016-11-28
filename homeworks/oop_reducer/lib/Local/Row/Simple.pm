@@ -26,13 +26,15 @@ our $VERSION = '1.00';
 
 =head1 SYNOPSIS
 
+Local::Row::Simple — каждая строка — набор пар `ключ:значение`
+
 =cut
 
 sub get {
   my ($self, $name, $default) = @_;
-  my $str = $self->str;  
-  $str =~ s/:/=>/g;
-  my %h = %{eval '{'.$str.'}'};
+  my $str = $self->str;
+  my %h;      # Так менее понятно, но безопаснее  
+  $h{$1} = $2 while $str =~ m/([^:]*):\s*([^,]*),?/g;
   return $h{$name} if $h{$name};
   return $default;
 }

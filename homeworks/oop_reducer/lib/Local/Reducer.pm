@@ -68,7 +68,7 @@ sub step {}
 sub BUILD {
     my ( $self ) = @_;
     # p $self;
-    $self->{reduced} = ($self->initial_value);
+    #  $self->{reduced} = ($self->initial_value);
     my $inc = $self->row_class;
     $inc =~ s/::/\//g;
     require $inc.'.pm';
