@@ -10,10 +10,6 @@ use Mouse;
 
 extends 'Local::Reducer';
 
-has version => (is => 'rw');
-has source =>  (is =>'rw');
-has initial_value =>( is => 'rw');
-has row_class => ( is => 'rw');
 # has reduced => (is => 'rw');
 has field => (is => 'rw');
 our $VERSION = '1.00';

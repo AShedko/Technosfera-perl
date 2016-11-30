@@ -10,10 +10,6 @@ use Mouse;
 
 extends 'Local::Reducer';
 
-has version => (is => 'rw');
-has source =>  (is =>'rw');
-has initial_value =>( is => 'rw');
-has row_class => ( is => 'rw');
 has top => (is => 'rw');
 has bottom => (is => 'rw');
 
