@@ -28,7 +28,7 @@ my $tests = [
 		message    => ['( 1 + 2 ) * -3', '5+5 - 10 *2'],
 		result     => [-9, -10],
 		multiplier => 10,
-	},
+  },
 	{
 		name       => 'Test negative type 2 (2 clients)',
 		multi      => 2,

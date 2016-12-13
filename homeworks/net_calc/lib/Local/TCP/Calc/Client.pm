@@ -8,10 +8,14 @@ sub set_connect {
 	my $pkg = shift;
 	my $ip = shift;
 	my $port = shift;
-	...
+	$server = IO::Socket::INET->new(
+                                  Proto    => "tcp",
+                                  PeerAddr => "$ip",
+                                  PeerPort => "$port",
+                                 )
+    || die "can't connect to Server";
 	# read header before read message
 	# check on Local::TCP::Calc::TYPE_CONN_ERR();
-	...
 	return $server;
 }
 

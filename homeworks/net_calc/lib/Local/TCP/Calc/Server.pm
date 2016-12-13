@@ -4,6 +4,8 @@ use strict;
 use Local::TCP::Calc;
 use Local::TCP::Calc::Server::Queue;
 use Local::TCP::Calc::Server::Worker;
+use Socket;
+
 
 my $max_worker;
 my $in_process = 0;
@@ -11,6 +13,8 @@ my $in_process = 0;
 my $pids_master = {};
 my $receiver_count = 0;
 my $max_forks_per_task = 0;
+
+sub logmsg { print "$0 $$: @_ at ", scalar localtime(), "\n" }
 
 sub REAPER {
 	...
@@ -23,11 +27,17 @@ sub start_server {
 	$max_worker         = $opts{max_worker} // die "max_worker required"; 
 	$max_forks_per_task = $opts{max_forks_per_task} // die "max_forks_per_task required";
 	my $max_receiver    = $opts{max_receiver} // die "max_receiver required"; 
-	...
-	# Инициализируем сервер my $server = IO::Socket::INET->new(...);
+  my $server = IO::Socket::INET->new(
+                                     PeerAddr => "127.0.0.1",
+                                     PeerPort => $port,
+                                     Proto => "tcp",
+                                     Type => SOCK_STREAM) or die "Can't connect: $/";
+
+  # Инициализируем сервер my $server = IO::Socket::INET->new(...);
 	# Инициализируем очередь my $q = Local::TCP::Calc::Server::Queue->new(...);
-  	...
-	$q->init();
+  my $q = Local::TCP::Calc::Server::Queue->new(...);
+
+  $q->init();
 	...
 	# Начинаем accept-тить подключения
 	# Проверяем, что количество принимающих форков не вышло за пределы допустимого ($max_receiver)
