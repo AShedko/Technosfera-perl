@@ -45,10 +45,9 @@ void process(metric* m,int val){
    if (fl & 2) (*m).max = max((*m).max, val);
    if (fl & 4) (*m).cnt ++; 
    if (fl & 8) (*m).sum += val;
-   if ((bool)(fl & 16) && !(fl&12)){
-       (*m).sum+=val;
-       (*m).cnt++;
-       }
+   if (fl & 16 && !(fl&8) ){(*m).sum+=val;};
+   if (fl & 16 && !(fl&4) ){(*m).cnt++;};
+
 }
 
 static SV * keepSub = (SV*)NULL;
@@ -84,7 +83,12 @@ INIT:
         if (fl & 2) hv_store(rh, "max",3,newSViv(m->max),0);
         if (fl & 4) hv_store(rh, "cnt",3,newSViv(m->cnt),0);
         if (fl & 8) hv_store(rh, "sum",3,newSViv(m->sum),0);
-        if (fl & 16)hv_store(rh,"avg",3,newSVnv((double)(*m).sum/m->cnt),0);
+        if (fl & 16){
+            double d=0;
+            if (m->cnt !=0)
+                d = (double)(*m).sum/m->cnt;
+            hv_store(rh,"avg",3,newSVnv(d),0);
+        }
 
         (*m) = (metric) {m->name,0,0,0,0,fl};
         hv_store(rethash,m->name,strlen(m->name),newRV((SV *)rh),0);
@@ -110,17 +114,17 @@ void add (mname, value)
             }
     }
     if (flag){ 
-        printf("%s : %d\n",mname,value);
+//        printf("%s : %d\n",mname,value);
         ENTER; SAVETMPS;PUSHMARK(SP);
 
             count = call_sv(keepSub, G_NOARGS|G_ARRAY);
 
         SPAGAIN;
             metrics[metric_cnt] = (metric) {mname,0,0,0,0,0};
-            printf("Count: %d\n",count);
+  //          printf("Count: %d\n",count);
             for (int i=1; i<=count;i++){
                 metrics[metric_cnt].flags |= metricmap(POPp);
-                printf("type %d : %d\n",i,metrics[metric_cnt].flags);
+    //            printf("type %d : %d\n",i,metrics[metric_cnt].flags);
             }
         FREETMPS;LEAVE;
         process(&metrics[metric_cnt],value);   
